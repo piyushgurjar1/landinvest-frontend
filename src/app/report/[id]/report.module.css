@@ -1,0 +1,929 @@
+/* ============================================================
+   Report Page – Premium Due Diligence Report
+   ============================================================ */
+
+.reportPage {
+    min-height: 100vh;
+    background: var(--bg-light);
+}
+
+/* ── Loading ── */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 20px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--surface-mint);
+    border-top-color: var(--primary-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loadingText {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ── Verdict Banner ── */
+.verdictBanner {
+    padding: 28px 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.verdictBanner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background: currentColor;
+}
+
+.verdictBannerStrongBuy {
+    color: #15803d;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-bottom: 3px solid #22c55e;
+}
+
+.verdictBannerBuy {
+    color: #166534;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-bottom: 3px solid #4ade80;
+}
+
+.verdictBannerHold {
+    color: #92400e;
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-bottom: 3px solid #f59e0b;
+}
+
+.verdictBannerPass {
+    color: #991b1b;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-bottom: 3px solid #ef4444;
+}
+
+.verdictBadge {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+    border-radius: 100px;
+    background: currentColor;
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.verdictBadge span {
+    color: white;
+}
+
+/* NEW — wraps verdict text + bid recommendation */
+.verdictContent {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.verdictText {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* NEW — bid recommendation line in banner */
+.bidRecommendation {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.8;
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: inline-block;
+}
+
+/* NEW — small verdict badge used in deal score section */
+.verdictBadgeSmall {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-top: 6px;
+    color: currentColor;
+    border: 1.5px solid currentColor;
+    background: transparent;
+}
+
+/* ── Report Container ── */
+.reportContainer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+/* ── Back Link ── */
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    transition: color var(--transition-fast);
+    cursor: pointer;
+}
+
+.backLink:hover {
+    color: var(--primary-green);
+}
+
+/* ── Report Header ── */
+.reportHeader {
+    margin-bottom: 32px;
+}
+
+.reportTitle {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.reportMeta {
+    font-size: 14px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.reportMeta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── Core Signals Grid — 12 cards, 4 × 3 ── */
+.coreSignals {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.signalCard {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    border: 1px solid var(--surface-mint);
+    transition: all var(--transition-normal);
+}
+
+.signalCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.signalLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.signalValue {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.signalValueGold  { color: var(--accent-gold); }
+.signalValueGreen { color: var(--success); }
+
+.signalSub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Deal Score card */
+.dealScoreCard {
+    background: linear-gradient(135deg, var(--deep-green), var(--primary-green));
+    border: none;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.dealScoreCard::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 80%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(185, 155, 59, 0.12), transparent 60%);
+}
+
+.dealScoreCard .signalLabel { color: rgba(255, 255, 255, 0.7); }
+.dealScoreCard .signalValue { color: var(--accent-gold); font-size: 36px; }
+.dealScoreCard .signalSub   { color: rgba(255, 255, 255, 0.6); }
+
+/* NEW — Risk Score card */
+.riskScoreCard {
+    background: var(--bg-white);
+    border: 1px solid var(--surface-mint);
+    position: relative;
+    overflow: hidden;
+}
+
+.riskScoreCard .signalValue {
+    font-size: 36px;
+}
+
+/* ── Map Links Bar (below signal grid) ── */
+.mapLinksBar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--bg-white);
+    border: 1px solid var(--surface-mint);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+}
+
+.mapLinksLabel {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    flex: 1;
+}
+
+/* Inline map links inside a dataGrid cell */
+.mapLinksInline {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.mapLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-green);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.mapLink:hover {
+    color: var(--accent-gold);
+    text-decoration: underline;
+}
+
+/* ── Strengths / Concerns grid ── */
+.strengthsConcernsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.strengthsCard {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.strengthsTitle {
+    font-weight: 600;
+    font-size: 14px;
+    color: #15803d;
+    margin-bottom: 10px;
+}
+
+.strengthsItem {
+    font-size: 14px;
+    color: #166534;
+    padding: 4px 0;
+    line-height: 1.5;
+}
+
+.concernsCard {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.concernsTitle {
+    font-weight: 600;
+    font-size: 14px;
+    color: #92400e;
+    margin-bottom: 10px;
+}
+
+.concernsItem {
+    font-size: 14px;
+    color: #78350f;
+    padding: 4px 0;
+    line-height: 1.5;
+}
+
+/* ── Sections ── */
+.sectionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.section {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--surface-mint);
+    overflow: hidden;
+    transition: box-shadow var(--transition-normal);
+}
+
+.section:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    user-select: none;
+}
+
+.sectionHeader:hover {
+    background: var(--bg-light);
+}
+
+.sectionHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sectionIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--surface-mint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sectionIcon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--primary-green);
+    fill: none;
+    stroke-width: 2;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sectionSubtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.sectionChevron {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+    transition: transform var(--transition-normal);
+    flex-shrink: 0;
+}
+
+.sectionChevronOpen {
+    transform: rotate(180deg);
+}
+
+.sectionBody {
+    padding: 0 24px 24px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* NEW — sub-section title within a section body */
+.subSectionTitle {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    margin-top: 4px;
+}
+
+/* ── Data Grid ── */
+.dataGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.dataGridThree {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.dataItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dataLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.dataValue {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ── Info Note (generic highlighted note box) ── */
+.infoNote {
+    padding: 12px 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* NEW — formula note */
+.formulaNote {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: #166534;
+    font-family: monospace;
+    letter-spacing: 0.3px;
+}
+
+/* ── Flag Pills ── */
+.flagsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.flagPill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.flagYes     { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.flagNo      { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.flagNeutral { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+.flagIcon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* ── Data Tables ── */
+.dataTableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.dataTable th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--surface-mint);
+    white-space: nowrap;
+}
+
+.dataTable th:first-child { border-radius: var(--radius-md) 0 0 0; }
+.dataTable th:last-child  { border-radius: 0 var(--radius-md) 0 0; }
+
+.dataTable td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--surface-mint);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.dataTable tr:last-child td { border-bottom: none; }
+
+/* ── Strategy / Bid Grid ── */
+.strategyGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.strategyCard {
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    text-align: center;
+    border: 1px solid var(--surface-mint);
+}
+
+.strategyCardConservative { background: #f0fdf4; border-color: #bbf7d0; }
+.strategyCardMid          { background: linear-gradient(135deg, var(--deep-green), var(--primary-green)); border: none; color: white; }
+.strategyCardAggressive   { background: #fffbeb; border-color: #fde68a; }
+
+.strategyLabel    { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; opacity: 0.7; }
+.strategyBid      { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+.strategyBidLabel { font-size: 12px; opacity: 0.6; margin-bottom: 12px; }
+.strategyResale      { font-size: 20px; font-weight: 600; }
+.strategyResaleLabel { font-size: 12px; opacity: 0.6; }
+
+/* NEW — Suggested Resale highlight bar */
+.suggestedResaleBar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, var(--deep-green), var(--primary-green));
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.suggestedResaleLabel {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+
+.suggestedResaleValue {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent-gold);
+    flex: 1;
+    text-align: center;
+}
+
+.suggestedResaleSub {
+    font-size: 12px;
+    opacity: 0.7;
+    font-family: monospace;
+    white-space: nowrap;
+}
+
+/* NEW — Market classification badge */
+.marketClassBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 100px;
+    border: 1.5px solid;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* NEW — Deal + Risk score side-by-side display */
+.scoreCardsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 8px;
+}
+
+.dealScoreDisplay,
+.riskScoreDisplay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--surface-mint);
+    text-align: center;
+}
+
+.dealScoreDisplay {
+    background: linear-gradient(135deg, var(--deep-green), var(--primary-green));
+    border: none;
+    color: white;
+}
+
+.riskScoreDisplay {
+    background: var(--bg-white);
+}
+
+.scoreBigNumber {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.scoreBigLabel {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+    opacity: 0.8;
+}
+
+.scoreBigSub {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+/* styles.module.css */
+.apnBadge {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 11px;
+    background: var(--bg-secondary, #1e1e2e);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 4px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+}
+
+.scoreExplanation {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+/* NEW — scoring factor row */
+.scoringFactor {
+    padding: 8px 12px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 6px;
+    border-left: 3px solid var(--primary-green);
+}
+
+/* NEW — risk factor row */
+.riskFactorItem {
+    padding: 8px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: #991b1b;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+/* NEW — workflow checklist grid */
+.workflowGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.workflowStep {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--surface-mint);
+}
+
+.workflowStepIcon {
+    font-size: 18px;
+    font-weight: 700;
+    width: 24px;
+    flex-shrink: 0;
+    text-align: center;
+    margin-top: 1px;
+}
+
+.workflowStepContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.workflowStepName {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.workflowStepNum {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface-mint);
+    padding: 2px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.workflowStepStatus {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.workflowStepNotes {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* ── Red Flags ── */
+.redFlagsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.redFlagItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: #991b1b;
+    font-weight: 500;
+}
+
+.noFlags {
+    padding: 20px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-md);
+    color: #15803d;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Sources ── */
+.sourcesList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sourceTag {
+    padding: 6px 14px;
+    background: var(--surface-mint);
+    color: var(--text-secondary);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    word-break: break-all;
+    transition: background var(--transition-fast);
+}
+
+a.sourceTag:hover {
+    background: var(--primary-green);
+    color: white;
+}
+
+/* ── Compliance Disclaimer ── */
+.disclaimer {
+    margin-top: 40px;
+    padding: 24px;
+    background: var(--bg-white);
+    border: 1px solid var(--surface-mint);
+    border-radius: var(--radius-lg);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.disclaimer strong {
+    color: var(--text-secondary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .coreSignals              { grid-template-columns: repeat(3, 1fr); }
+    .flagsGrid                { grid-template-columns: repeat(2, 1fr); }
+    .strategyGrid             { grid-template-columns: 1fr; }
+    .strengthsConcernsGrid    { grid-template-columns: 1fr; }
+    .scoreCardsRow            { grid-template-columns: 1fr; }
+    .suggestedResaleBar       { flex-direction: column; text-align: center; gap: 8px; }
+}
+
+@media (max-width: 768px) {
+    .reportContainer   { padding: 16px; }
+    .verdictBanner     { padding: 20px 16px; flex-direction: column; align-items: flex-start; }
+    .reportTitle       { font-size: 22px; }
+    .coreSignals       { grid-template-columns: repeat(2, 1fr); }
+    .dataGrid          { grid-template-columns: 1fr; }
+    .dataGridThree     { grid-template-columns: repeat(2, 1fr); }
+    .flagsGrid         { grid-template-columns: repeat(2, 1fr); }
+    .strategyGrid      { grid-template-columns: 1fr; }
+    .strengthsConcernsGrid { grid-template-columns: 1fr; }
+    .scoreCardsRow     { grid-template-columns: 1fr; }
+    .mapLinksBar       { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .dataTable         { font-size: 13px; }
+    .sectionHeader     { padding: 16px; }
+    .sectionBody       { padding: 0 16px 20px; }
+    .scoreBigNumber    { font-size: 48px; }
+    .suggestedResaleBar { flex-direction: column; text-align: center; }
+}
+
+@media (max-width: 480px) {
+    .coreSignals       { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .signalCard        { padding: 14px; }
+    .signalValue       { font-size: 18px; }
+    .dealScoreCard .signalValue { font-size: 28px; }
+    .riskScoreCard .signalValue { font-size: 28px; }
+    .flagsGrid         { grid-template-columns: 1fr; }
+    .dataGridThree     { grid-template-columns: 1fr; }
+    .verdictBadge      { font-size: 12px; padding: 6px 14px; }
+    .verdictText       { font-size: 13px; }
+    .scoreBigNumber    { font-size: 40px; }
+    .workflowStepName  { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
