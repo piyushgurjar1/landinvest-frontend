@@ -541,7 +541,7 @@ export default function ReportPage() {
                     </Section>
 
                     {/* ── SECTION 7 — Auction Bid Ceiling ── */}
-                    <Section title="Auction Bid Ceiling Engine" subtitle="Step 8 — Prevent Overbidding · MMV-Based Formula"
+                    <Section title="Auction Bid Ceiling Engine" subtitle="Step 7 — Prevent Overbidding · MMV-Based Formula"
                         icon={<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
                     >
                         <div className={styles.valueRangeCards}>
@@ -579,7 +579,7 @@ export default function ReportPage() {
                     </Section>
 
                     {/* ── SECTION 8 — Resale Price Range ── */}
-                    <Section title="Resale Price Range" subtitle="Step 7 — What You Could List For"
+                    <Section title="Resale Price Range" subtitle="Step 8 — What You Could List For"
                         icon={<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>}
                     >
                         <div className={styles.valueRangeCards}>
