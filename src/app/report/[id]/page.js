@@ -193,13 +193,13 @@ export default function ReportPage() {
 
     const verdictClass =
         summary.verdict === "STRONG BUY" ? styles.verdictBannerStrongBuy :
-        summary.verdict === "BUY"        ? styles.verdictBannerBuy :
-        summary.verdict === "HOLD"       ? styles.verdictBannerHold :
-                                           styles.verdictBannerPass;
+            summary.verdict === "BUY" ? styles.verdictBannerBuy :
+                summary.verdict === "HOLD" ? styles.verdictBannerHold :
+                    styles.verdictBannerPass;
 
     const workflowStatusColor = (status) =>
         status === "Complete" ? "var(--success)" :
-        status === "Partial"  ? "var(--warning)" : "var(--text-muted)";
+            status === "Partial" ? "var(--warning)" : "var(--text-muted)";
 
     const workflowStatusIcon = (status) =>
         status === "Complete" ? "✓" : status === "Partial" ? "◑" : "✗";
@@ -452,19 +452,22 @@ export default function ReportPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {soldComps.map((c, i) => (
-                                            <tr key={i}>
-                                                <td>{c.apn ? <span className={styles.apnBadge}>{c.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
-                                                <td>{fmt(c.sold_price)}</td>
-                                                <td>{fmt(c.price_per_acre)}</td>
-                                                <td>{c.acreage}</td>
-                                                <td>{c.distance_or_location}</td>
-                                                <td>{c.sold_date}</td>
-                                                <td>{c.zoning || NF}</td>
-                                                <td>{c.access_notes || NF}</td>
-                                                <td>{c.source_url ? <a href={c.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>View ↗</a> : <span className={styles.notAvailable}>Not available</span>}</td>
-                                            </tr>
-                                        ))}
+                                        {soldComps.map((c, i) => {
+                                            const validUrl = c.source_url && String(c.source_url).toLowerCase() !== "null";
+                                            return (
+                                                <tr key={i}>
+                                                    <td>{c.apn ? <span className={styles.apnBadge}>{c.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
+                                                    <td>{fmt(c.sold_price)}</td>
+                                                    <td>{fmt(c.price_per_acre)}</td>
+                                                    <td>{c.acreage}</td>
+                                                    <td>{c.distance_or_location}</td>
+                                                    <td>{c.sold_date}</td>
+                                                    <td>{c.zoning || NF}</td>
+                                                    <td>{c.access_notes || NF}</td>
+                                                    <td>{validUrl ? <a href={c.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>View ↗</a> : <span className={styles.notAvailable}>Not available</span>}</td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -485,17 +488,20 @@ export default function ReportPage() {
                                         <tr><th>APN</th><th>Price</th><th>$/Acre</th><th>Acres</th><th>DOM</th><th>Notes</th><th>Source</th></tr>
                                     </thead>
                                     <tbody>
-                                        {activeListings.map((l, i) => (
-                                            <tr key={i}>
-                                                <td>{l.apn ? <span className={styles.apnBadge}>{l.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
-                                                <td>{fmt(l.listing_price)}</td>
-                                                <td>{fmt(l.price_per_acre)}</td>
-                                                <td>{l.acreage}</td>
-                                                <td>{l.days_on_market ?? NF}</td>
-                                                <td>{l.terrain_and_access_notes || NF}</td>
-                                                <td>{l.source_url ? <a href={l.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>{l.source || "View ↗"}</a> : l.source ? <span>{l.source}</span> : <span className={styles.notAvailable}>Not available</span>}</td>
-                                            </tr>
-                                        ))}
+                                        {activeListings.map((l, i) => {
+                                            const validUrl = l.source_url && String(l.source_url).toLowerCase() !== "null";
+                                            return (
+                                                <tr key={i}>
+                                                    <td>{l.apn ? <span className={styles.apnBadge}>{l.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
+                                                    <td>{fmt(l.listing_price)}</td>
+                                                    <td>{fmt(l.price_per_acre)}</td>
+                                                    <td>{l.acreage}</td>
+                                                    <td>{l.days_on_market ?? NF}</td>
+                                                    <td>{l.terrain_and_access_notes || NF}</td>
+                                                    <td>{validUrl ? <a href={l.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>{l.source || "View ↗"}</a> : l.source ? <span>{l.source}</span> : <span className={styles.notAvailable}>Not available</span>}</td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -541,7 +547,7 @@ export default function ReportPage() {
                     </Section>
 
                     {/* ── SECTION 7 — Auction Bid Ceiling ── */}
-                    <Section title="Auction Bid Ceiling Engine" subtitle="Step 8 — Prevent Overbidding · MMV-Based Formula"
+                    <Section title="Auction Bid Ceiling Engine" subtitle="Step 7 — Prevent Overbidding · MMV-Based Formula"
                         icon={<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
                     >
                         <div className={styles.valueRangeCards}>
@@ -579,7 +585,7 @@ export default function ReportPage() {
                     </Section>
 
                     {/* ── SECTION 8 — Resale Price Range ── */}
-                    <Section title="Resale Price Range" subtitle="Step 7 — What You Could List For"
+                    <Section title="Resale Price Range" subtitle="Step 8 — What You Could List For"
                         icon={<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>}
                     >
                         <div className={styles.valueRangeCards}>
