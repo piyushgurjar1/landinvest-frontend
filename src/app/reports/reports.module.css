@@ -80,7 +80,7 @@
     font-weight: 600;
     color: white;
     background: linear-gradient(135deg, var(--primary-green), var(--deep-green));
-    border: none;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all 200ms ease;
@@ -88,8 +88,10 @@
 }
 
 .searchBtn:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    background: linear-gradient(180deg, #FAD665 0%, #D49D3C 100%);
+    color: #1B4332; /* Dark green text on hover */
+    border-color: #63401A; /* Dark border */
+    box-shadow: 0 4px 12px rgba(212, 157, 60, 0.35);
 }
 
 /* Loading */
