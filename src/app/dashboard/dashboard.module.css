@@ -12,7 +12,6 @@
     padding: 0 24px;
 }
 
-
 /* ══════════════════════════
    HERO CARD
 ══════════════════════════ */
@@ -140,7 +139,6 @@
     line-height: 1.4;
 }
 
-
 /* ══════════════════════════
    TWO-COLUMN ACTION GRID
 ══════════════════════════ */
@@ -151,7 +149,6 @@
     align-items: stretch;
 }
 
-/* Shared panel */
 .panelCard {
     background: #ffffff;
     border-radius: 16px;
@@ -162,7 +159,6 @@
     flex-direction: column;
 }
 
-/* Panel header */
 .panelHeader {
     display: flex;
     align-items: flex-start;
@@ -198,9 +194,8 @@
     margin: 0;
 }
 
-
 /* ══════════════════════════
-   LEFT: APN Form
+   APN FORM
 ══════════════════════════ */
 .apnForm {
     display: flex;
@@ -209,10 +204,11 @@
     flex: 1;
 }
 
-.apnInput {
+.apnInput,
+.apnInputHalf {
     width: 100%;
-    padding: 13px 16px;
-    font-size: 14.5px;
+    padding: 11px 14px;
+    font-size: 13.5px;
     font-weight: 400;
     color: #111827;
     background: #f9fafb;
@@ -220,15 +216,18 @@
     border-radius: 8px;
     transition: all 0.18s ease;
     box-sizing: border-box;
+    font-family: inherit;
+    outline: none;
 }
 
-.apnInput::placeholder { color: #9ca3af; }
+.apnInput::placeholder,
+.apnInputHalf::placeholder { color: #9ca3af; }
 
-.apnInput:focus {
+.apnInput:focus,
+.apnInputHalf:focus {
     background: #ffffff;
     border-color: #123826;
     box-shadow: 0 0 0 3px rgba(18, 56, 38, 0.08);
-    outline: none;
 }
 
 .apnRowSmall {
@@ -236,32 +235,194 @@
     gap: 10px;
 }
 
-.apnInputHalf {
-    flex: 1;
-    padding: 13px 16px;
-    font-size: 14.5px;
-    font-weight: 400;
-    color: #111827;
+.apnInputHalf { flex: 1; min-width: 0; }
+
+/* ══════════════════════════════════════
+   ADDRESS FIELD — Custom REST Autocomplete
+   No Maps JS SDK required.
+   Uses Places REST API via fetch().
+══════════════════════════════════════ */
+
+.addressFieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Outer wrapper — establishes positioning context for the dropdown */
+.addressAutoWrap {
+    position: relative;
+    width: 100%;
+}
+
+/* Inner wrapper — positions the pin icon and clear button */
+.addressInputWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
     background: #f9fafb;
     border: 1.5px solid #e5e7eb;
     border-radius: 8px;
     transition: all 0.18s ease;
-    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-.apnInputHalf::placeholder { color: #9ca3af; }
-
-.apnInputHalf:focus {
+.addressInputWrapFocused {
     background: #ffffff;
     border-color: #123826;
     box-shadow: 0 0 0 3px rgba(18, 56, 38, 0.08);
-    outline: none;
 }
 
+.addressPinIcon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    flex-shrink: 0;
+    z-index: 1;
+    transition: color 0.18s ease;
+}
+
+.addressInputWrapFocused .addressPinIcon {
+    color: #123826;
+}
+
+/* The plain <input> — fully styleable */
+.addressInput {
+    width: 100%;
+    padding: 11px 32px 11px 34px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #111827;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.addressInput::placeholder { color: #9ca3af; }
+
+/* Clear (×) button inside the input */
+.addressClearBtn {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.addressClearBtn:hover {
+    background: #d1d5db;
+    color: #111827;
+}
+
+/* ── Custom suggestions dropdown ── */
+.suggestionsList {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04), 0 12px 28px rgba(0, 0, 0, 0.10);
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    z-index: 9999;
+    overflow: hidden;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.suggestionItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-top: 1px solid #f3f4f6;
+    transition: background 0.12s ease;
+    line-height: 1;
+}
+
+.suggestionItem:first-child { border-top: none; }
+
+.suggestionItem:hover,
+.suggestionItemActive {
+    background: #f0f6f3;
+}
+
+.suggestionPin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #9ca3af;
+    transition: color 0.12s ease;
+}
+
+.suggestionItem:hover .suggestionPin,
+.suggestionItemActive .suggestionPin {
+    color: #123826;
+}
+
+.suggestionText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.suggestionMain {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestionSub {
+    font-size: 11.5px;
+    color: #9ca3af;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Optional hint ── */
+.optionalHint {
+    font-size: 11.5px;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0 2px;
+}
+
+/* ── Analyse button ── */
 .analyzeBtn {
     width: 100%;
-    padding: 14px;
-    font-size: 15px;
+    padding: 13px;
+    font-size: 14.5px;
     font-weight: 700;
     color: #ffffff;
     background: #123826;
@@ -274,40 +435,36 @@
     justify-content: center;
     gap: 8px;
     margin-top: auto;
+    font-family: inherit;
 }
 
-.analyzeBtn:hover {
+.analyzeBtn:hover:not(:disabled) {
     background: linear-gradient(180deg, #FAD665 0%, #D49D3C 100%);
     color: #1B4332;
     border-color: #63401A;
     box-shadow: 0 4px 14px rgba(212, 157, 60, 0.35);
 }
 
-.analyzeBtn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
+.analyzeBtn:disabled { opacity: 0.7; cursor: not-allowed; }
 
 /* ══════════════════════════
-   RIGHT: CSV Upload
+   CSV UPLOAD
 ══════════════════════════ */
 .csvUploadArea {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     flex: 1;
 }
 
-/* ── Column Reference box ── */
 .csvColumnRef {
-    padding: 8px 10px;
+    padding: 10px 12px;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .csvColumnRefLabel {
@@ -322,27 +479,23 @@
     line-height: 1;
 }
 
-.csvColumnRefLabel svg {
-    color: #9ca3af;
-    flex-shrink: 0;
-}
+.csvColumnRefLabel svg { color: #9ca3af; flex-shrink: 0; }
 
 .csvColumnTags {
     display: flex;
     flex-wrap: wrap;
-    gap: 3px;
+    gap: 4px;
 }
 
-/* Required tag — APN# */
 .csvColRequired {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 7px;
+    padding: 3px 8px;
     background: rgba(18, 56, 38, 0.07);
     border: 1px solid rgba(18, 56, 38, 0.18);
     border-radius: 100px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: #123826;
     line-height: 1.4;
@@ -350,7 +503,7 @@
 
 .csvColRequired em {
     font-style: normal;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -362,28 +515,36 @@
     line-height: 1.4;
 }
 
-/* Optional tags */
 .csvColOptional {
     display: inline-flex;
-    padding: 2px 6px;
+    padding: 3px 8px;
     background: #f3f4f6;
     border: 1px solid #e5e7eb;
     border-radius: 100px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     color: #6b7280;
     line-height: 1.4;
 }
 
-/* ── Dropzone: compact horizontal strip ── */
+.csvOptionalHint {
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin: 0;
+    padding-top: 4px;
+    border-top: 1px dashed #e5e7eb;
+}
+
 .csvDropzone {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    min-height: 48px;
+    gap: 10px;
+    padding: 20px 16px;
+    flex: 1;
+    min-height: 80px;
     background: #f9fafb;
     border: 2px dashed #d1d5db;
     border-radius: 10px;
@@ -405,8 +566,15 @@
 
 .csvDropzone:hover .csvDropzoneIcon { color: #123826; }
 
+.csvDropzoneContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
 .csvDropzoneText {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #374151;
 }
@@ -422,13 +590,13 @@
     font-weight: 600;
     color: #123826;
     word-break: break-all;
+    padding: 0 8px;
 }
 
-/* ── Upload Button ── */
 .csvUploadBtn {
     width: 100%;
-    padding: 14px;
-    font-size: 15px;
+    padding: 13px;
+    font-size: 14.5px;
     font-weight: 700;
     color: #ffffff;
     background: #123826;
@@ -441,9 +609,10 @@
     justify-content: center;
     gap: 8px;
     margin-top: auto;
+    font-family: inherit;
 }
 
-.csvUploadBtn:hover {
+.csvUploadBtn:hover:not(:disabled) {
     background: linear-gradient(180deg, #FAD665 0%, #D49D3C 100%);
     color: #1B4332;
     border-color: #63401A;
@@ -452,13 +621,12 @@
 
 .csvUploadBtn:disabled {
     background: #9ca3af;
+    border-color: #9ca3af;
     cursor: not-allowed;
-    transform: none;
     box-shadow: none;
 }
 
-
-/* Status messages */
+/* ── Status messages ── */
 .errorMessage {
     margin-top: 12px;
     background: #fef2f2;
@@ -471,7 +639,7 @@
 }
 
 .successMessage {
-    margin-top: 12px;
+    margin-top: 4px;
     background: #ecfdf5;
     color: #047857;
     border: 1px solid #34d399;
@@ -481,8 +649,7 @@
     font-weight: 500;
 }
 
-
-/* Spinner */
+/* ── Spinner ── */
 .spinner {
     display: inline-block;
     width: 15px;
@@ -495,7 +662,6 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
-
 
 /* ══════════════════════════
    MODAL
@@ -549,6 +715,7 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.18s ease;
+    font-family: inherit;
 }
 
 .modalBtnPrimary:hover { background: #0d2a1c; transform: translateY(-1px); }
@@ -563,10 +730,10 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.18s ease;
+    font-family: inherit;
 }
 
 .modalBtnSecondary:hover { background: #e5e7eb; }
-
 
 /* ══════════════════════════
    RESPONSIVE
@@ -579,10 +746,7 @@
     .heroTitle { white-space: normal; font-size: clamp(22px, 4vw, 30px); }
     .heroFeaturesGrid { grid-template-columns: repeat(2, 1fr); }
     .heroCard { padding: 40px 24px; }
-    .actionGrid {
-        grid-template-columns: 1fr;
-        align-items: start;
-    }
+    .actionGrid { grid-template-columns: 1fr; align-items: start; }
     .modalCard { padding: 28px 20px; }
     .modalActions { flex-direction: column; }
 }

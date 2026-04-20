@@ -1,10 +1,10 @@
-/* ── Container (Not Sticky) ── */
+/* ── Container ── */
 .navbarContainer {
-    position: relative; 
+    position: relative;
     padding: 16px;
     max-width: 1300px;
     margin: 0 auto;
-    z-index: 200;
+    z-index: 300;       /* higher than backdrop's 299 */
 }
 
 .navbar {
@@ -14,13 +14,10 @@
     padding: 0 24px;
     height: 72px;
     background: #ffffff;
-    border-radius: 09px;
-
+    border-radius: 9px;
     border: 1px solid rgba(0, 0, 0, 0.05);
-
-    box-shadow: 
+    box-shadow:
         0 10px 20px -8px rgba(0, 0, 0, 0.35),
-        /* 0 6px 12px -6px rgba(0, 0, 0, 0.25), */
         0 2px 1px 1px rgba(0, 0, 0, 0.08);
 }
 
@@ -42,7 +39,7 @@
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 1.35rem;
     font-weight: 700;
-    color: #1B4332; 
+    color: #1B4332;
     letter-spacing: -0.2px;
 }
 
@@ -65,16 +62,14 @@
     transition: color 0.2s ease;
 }
 
-.navLink:hover {
-    color: #1B4332;
-}
+.navLink:hover { color: #1B4332; }
 
 .navLinkActive {
     color: #1B4332;
     font-weight: 600;
 }
 
-/* ── Right side Buttons ── */
+/* ── Right side ── */
 .navRight {
     display: flex;
     align-items: center;
@@ -95,7 +90,6 @@
     cursor: default;
 }
 
-/* Desktop Sign Out Button with new hover */
 .logoutBtn {
     padding: 8px 24px;
     font-size: 14px;
@@ -111,12 +105,12 @@
 
 .logoutBtn:hover {
     background: linear-gradient(180deg, #FAD665 0%, #D49D3C 100%);
-    color: #1B4332; /* Dark green text on hover */
-    border-color: #63401A; /* Dark border */
+    color: #1B4332;
+    border-color: #63401A;
     box-shadow: 0 4px 12px rgba(212, 157, 60, 0.35);
 }
 
-/* ── Hamburger button — hidden on desktop ── */
+/* ── Hamburger — hidden on desktop ── */
 .hamburger {
     display: none;
     flex-direction: column;
@@ -149,18 +143,19 @@
 /* ── Mobile dropdown drawer ── */
 .mobileMenu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% - 8px);   /* sits just below the navbar */
     left: 16px;
     right: 16px;
     background: #ffffff;
     border-radius: 8px;
-    box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15); /* Also softened the mobile drawer shadow */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     border: 1px solid #f3f4f6;
     padding: 0 16px;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
     opacity: 0;
+    z-index: 301;             /* above navbarContainer and backdrop */
 }
 
 .mobileMenuOpen {
@@ -203,12 +198,12 @@
     transition: color 0.2s ease;
 }
 
-.mobileNavLink:hover, .mobileNavLinkActive {
+.mobileNavLink:hover,
+.mobileNavLinkActive {
     color: #1B4332;
     font-weight: 600;
 }
 
-/* Mobile Sign Out Button with new hover */
 .mobileLogoutBtn {
     width: 100%;
     margin-top: 12px;
@@ -231,16 +226,16 @@
     box-shadow: 0 4px 12px rgba(212, 157, 60, 0.35);
 }
 
-/* Backdrop overlay */
+/* ── Backdrop — rendered outside navbarContainer ── */
 .mobileBackdrop {
     position: fixed;
     inset: 0;
-    z-index: 198;
+    z-index: 299;             /* below navbarContainer (300) and mobileMenu (301) */
     background: rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(2px);
 }
 
-/* ── Responsive breakpoints ── */
+/* ── Responsive ── */
 @media (max-width: 860px) {
     .navLeft { gap: 24px; }
     .navLinks { gap: 16px; }

@@ -121,7 +121,7 @@ export default function LoginPage() {
                         />
                     </div>
                     <h1 className={styles.logoTitle}>
-                        LandInvest<span className={styles.logoTitleAccent}>AI</span>
+                        TaxAuction.<span className={styles.logoTitleAccent}>AI</span>
                     </h1>
                     <p className={styles.logoSubtitle}>
                         {isLogin ? "Sign in to your account" : "Create your account"}

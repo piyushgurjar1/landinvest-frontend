@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import * as XLSX from "xlsx";
 import Navbar from "@/components/Navbar";
 import ChatBot from "@/components/ChatBot";
 import styles from "./report.module.css";
@@ -105,6 +106,8 @@ export default function ReportPage() {
     const nextStep = d.next_learning_step || "";
     const sources = d.sources_checked || [];
     const disclaimer = d.compliance_disclaimer || "This report is for educational purposes only. Not financial or legal advice.";
+    const floridaBid = d.florida_bid_data || null;
+    const isFlorida = !!floridaBid;
 
     const NF = <span className={styles.notFound}>Data not found</span>;
     const NA = <span className={styles.notAvailable}>Not available</span>;
@@ -128,7 +131,7 @@ export default function ReportPage() {
         return null;
     };
 
-    const downloadCsv = () => {
+    const downloadExcel = () => {
         const cols = [
             ["APN", report.apn], ["County", report.county], ["State", report.state],
             ["Full Address", fullAddress], ["Acreage", parcel.acreage], ["Sq Ft", parcel.sq_ft],
@@ -147,10 +150,21 @@ export default function ReportPage() {
             ["Nearby Structures", accessLoc.nearby_structures], ["Zoning Code", zoning.zoning_code],
             ["Zoning Description", zoning.zoning_description], ["Min Buildable Lot Size", zoning.minimum_lot_size],
             ["Allowed Uses", zoning.allowed_uses], ["Buildable", zoning.buildable],
-            ["Electric", utilities.electric], ["Water", utilities.water],
-            ["Sewer / Septic", utilities.sewer_or_septic], ["Internet", utilities.internet],
+            ["Electric", utilities.electricity_available === true ? "Yes" : utilities.electricity_available === false ? "No" : "Unknown"],
+            ["Water", utilities.water_available === true ? "Yes" : utilities.water_available === false ? "No" : "Unknown"],
+            ["Sewer", utilities.sewer_available === true ? "Yes" : utilities.sewer_available === false ? "No" : "Unknown"],
+            ["Gas", utilities.gas_available === true ? "Yes" : utilities.gas_available === false ? "No" : "Unknown"],
+            ["Septic Required", utilities.septic_required === true ? "Yes" : utilities.septic_required === false ? "No" : "Unknown"],
+            ["Well Required", utilities.well_required === true ? "Yes" : utilities.well_required === false ? "No" : "Unknown"],
+            ["Utility At Street", utilities.utility_at_street === true ? "Yes" : utilities.utility_at_street === false ? "No" : "Unknown"],
+            ["Utility Install Cost Est.", utilities.utility_cost_estimate],
+            ["Internet Provider", utilities.internet_provider],
+            ["Internet Type", utilities.internet_type],
+            ["Cell Coverage", utilities.cell_coverage],
+            ["Cell Carriers", utilities.cell_carriers],
             ["Terrain Description", terrain.terrain_description], ["Slope", terrain.slope_classification],
-            ["Washes / Arroyos", terrain.washes_or_arroyos], ["Nearby Parcel Usage", terrain.nearby_parcel_usage],
+            ["Washes / Arroyos", terrain.washes_or_arroyos === true ? "Yes" : terrain.washes_or_arroyos === false ? "No" : "Unknown"],
+            ["Nearby Parcel Usage", terrain.nearby_parcel_usage],
             ["Flood Zone", terrain.flood_zone != null ? (terrain.flood_zone ? "Yes" : "No") : ""],
             ["Fire Risk", terrain.fire_risk], ["Landslide Risk", terrain.landslide_risk],
             ["Soil Suitability", terrain.soil_suitability],
@@ -173,14 +187,28 @@ export default function ReportPage() {
             ["Sources Checked", (sources || []).join("; ")],
             ["Next Learning Step", nextStep],
         ];
-        const headers = cols.map(c => `"${String(c[0]).replace(/"/g, '""')}"`);
-        const values = cols.map(c => `"${String(c[1] ?? "").replace(/"/g, '""')}"`);
-        const csv = headers.join(",") + "\n" + values.join(",");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `report_${report.apn}.csv`;
-        a.click();
+        if (floridaBid) {
+            cols.push(
+                ["FL Max Bid", floridaBid.max_bid_ceiling],
+                ["FL Low Bid", floridaBid.low_bid_threshold],
+                ["FL Mid Bid", floridaBid.mid_bid_threshold],
+                ["FL Conservative Resale", floridaBid.conservative_resale],
+                ["FL Suggested Resale", floridaBid.suggested_resale_price],
+                ["FL Aggressive Resale", floridaBid.aggressive_resale],
+                ["FL Liquidity Factor", floridaBid.florida_lf],
+                ["FL Exit Price", floridaBid.florida_exit_price],
+                ["FL Ratio", floridaBid.florida_ratio],
+                ["FL Ratio Tier", floridaBid.florida_ratio_tier],
+                ["FL Hard Stop", floridaBid.florida_hard_stop ? "YES" : "NO"],
+            );
+        }
+        const headers = cols.map(c => String(c[0]));
+        const values = cols.map(c => c[1] ?? "");
+        const ws = XLSX.utils.aoa_to_sheet([headers, values]);
+        ws["!cols"] = headers.map((h) => ({ wch: Math.max(h.length + 2, 18) }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Report");
+        XLSX.writeFile(wb, `report_${report.apn}.xlsx`);
     };
 
     const downloadPdf = () => {
@@ -210,13 +238,13 @@ export default function ReportPage() {
 
             {/* ── Download Bar ── */}
             <div className={styles.downloadBar}>
-                <button className={styles.downloadBtn} onClick={downloadCsv}>
+                <button className={styles.downloadBtn} onClick={downloadExcel}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
-                    Download CSV
+                    Download Excel
                 </button>
                 <button className={styles.downloadBtn} onClick={downloadPdf}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -417,7 +445,7 @@ export default function ReportPage() {
                         <div className={styles.dataGrid} style={{ marginBottom: 16 }}>
                             <div className={styles.dataItem}><div className={styles.dataLabel}>Terrain</div><div className={styles.dataValue}>{terrain.terrain_description || NF}</div></div>
                             <div className={styles.dataItem}><div className={styles.dataLabel}>Slope</div><div className={styles.dataValue}>{terrain.slope_classification || NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Washes / Arroyos</div><div className={styles.dataValue}>{terrain.washes_or_arroyos || NF}</div></div>
+                            <div className={styles.dataItem}><div className={styles.dataLabel}>Washes / Arroyos</div><div className={styles.dataValue}>{terrain.washes_or_arroyos === true ? "Yes" : terrain.washes_or_arroyos === false ? "No" : NF}</div></div>
                             <div className={styles.dataItem}><div className={styles.dataLabel}>Nearby Usage</div><div className={styles.dataValue}>{terrain.nearby_parcel_usage || NF}</div></div>
                             <div className={styles.dataItem}>
                                 <div className={styles.dataLabel}>Flood Zone</div>
@@ -447,8 +475,8 @@ export default function ReportPage() {
                                 <table className={styles.dataTable}>
                                     <thead>
                                         <tr>
-                                            <th>APN</th><th>Price</th><th>$/Acre</th><th>Acres</th>
-                                            <th>Location</th><th>Date</th><th>Zoning</th><th>Access</th><th>Source</th>
+                                            <th>APN</th><th>Address</th><th>Price</th><th>$/Acre</th><th>Acres</th>
+                                            <th>Date</th><th>Zoning</th><th>Source</th><th>URL</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -457,14 +485,14 @@ export default function ReportPage() {
                                             return (
                                                 <tr key={i}>
                                                     <td>{c.apn ? <span className={styles.apnBadge}>{c.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
+                                                    <td>{c.address || c.distance_or_location || NF}</td>
                                                     <td>{fmt(c.sold_price)}</td>
                                                     <td>{fmt(c.price_per_acre)}</td>
                                                     <td>{c.acreage}</td>
-                                                    <td>{c.distance_or_location}</td>
                                                     <td>{c.sold_date}</td>
                                                     <td>{c.zoning || NF}</td>
-                                                    <td>{c.access_notes || NF}</td>
-                                                    <td>{validUrl ? <a href={c.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>View ↗</a> : <span className={styles.notAvailable}>Not available</span>}</td>
+                                                    <td>{c.source || <span className={styles.notAvailable}>—</span>}</td>
+                                                    <td>{validUrl ? <a href={c.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>View ↗</a> : <span className={styles.notAvailable}>—</span>}</td>
                                                 </tr>
                                             );
                                         })}
@@ -485,7 +513,7 @@ export default function ReportPage() {
                             <div className={styles.dataTableWrapper}>
                                 <table className={styles.dataTable}>
                                     <thead>
-                                        <tr><th>APN</th><th>Price</th><th>$/Acre</th><th>Acres</th><th>DOM</th><th>Notes</th><th>Source</th></tr>
+                                        <tr><th>APN</th><th>Address</th><th>Price</th><th>$/Acre</th><th>Acres</th><th>DOM</th><th>Source</th><th>URL</th></tr>
                                     </thead>
                                     <tbody>
                                         {activeListings.map((l, i) => {
@@ -493,12 +521,13 @@ export default function ReportPage() {
                                             return (
                                                 <tr key={i}>
                                                     <td>{l.apn ? <span className={styles.apnBadge}>{l.apn}</span> : <span className={styles.notFound}>N/A</span>}</td>
+                                                    <td>{l.address || l.terrain_and_access_notes || NF}</td>
                                                     <td>{fmt(l.listing_price)}</td>
                                                     <td>{fmt(l.price_per_acre)}</td>
                                                     <td>{l.acreage}</td>
                                                     <td>{l.days_on_market ?? NF}</td>
-                                                    <td>{l.terrain_and_access_notes || NF}</td>
-                                                    <td>{validUrl ? <a href={l.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>{l.source || "View ↗"}</a> : l.source ? <span>{l.source}</span> : <span className={styles.notAvailable}>Not available</span>}</td>
+                                                    <td>{l.source || <span className={styles.notAvailable}>—</span>}</td>
+                                                    <td>{validUrl ? <a href={l.source_url} target="_blank" rel="noopener noreferrer" className={styles.mapLink}>View ↗</a> : <span className={styles.notAvailable}>—</span>}</td>
                                                 </tr>
                                             );
                                         })}
@@ -553,45 +582,46 @@ export default function ReportPage() {
                         <div className={styles.valueRangeCards}>
                             <div className={styles.valueCard}>
                                 <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
-                                    <span className={styles.valueCardTag} style={{ color: "#15803d" }}>Low Threshold</span>
+                                    <span className={styles.valueCardTag} style={{ color: "#15803d" }}>Low Bid</span>
                                     <span style={{ fontSize: 11, color: "#166534" }}>Conservative</span>
                                 </div>
                                 <div className={styles.valueCardBody}>
                                     <div className={styles.valueCardPrice}>{fmt(bidCeiling.low_bid_threshold)}</div>
-                                    <div className={styles.valueCardSub}>Max safety buffer</div>
+                                    <div className={styles.valueCardSub}>Safe entry point</div>
                                 </div>
                             </div>
                             <div className={styles.valueCard} style={{ border: "2px solid var(--primary-green)" }}>
                                 <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, var(--deep-green), var(--primary-green))" }}>
-                                    <span className={styles.valueCardTag} style={{ color: "white" }}>★ Mid Threshold</span>
-                                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Balanced</span>
+                                    <span className={styles.valueCardTag} style={{ color: "white" }}>★ Mid Bid</span>
+                                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Recommended</span>
                                 </div>
                                 <div className={styles.valueCardBody}>
                                     <div className={styles.valueCardPrice} style={{ color: "var(--accent-gold)" }}>{fmt(bidCeiling.mid_bid_threshold)}</div>
-                                    <div className={styles.valueCardSub}>Recommended target</div>
+                                    <div className={styles.valueCardSub}>Balanced risk/reward</div>
                                 </div>
                             </div>
-                            <div className={styles.valueCard}>
+                            <div className={styles.valueCard} style={{ border: "2px solid #ef4444" }}>
                                 <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
-                                    <span className={styles.valueCardTag} style={{ color: "#991b1b" }}>🛑 Max Ceiling</span>
-                                    <span style={{ fontSize: 11, color: "#991b1b", fontWeight: 700 }}>HARD STOP</span>
+                                    <span className={styles.valueCardTag} style={{ color: "#dc2626" }}>Max Bid</span>
+                                    <span style={{ fontSize: 11, color: "#991b1b" }}>Do not exceed</span>
                                 </div>
                                 <div className={styles.valueCardBody}>
                                     <div className={styles.valueCardPrice} style={{ color: "#ef4444" }}>{fmt(bidCeiling.max_bid_ceiling)}</div>
-                                    <div className={styles.valueCardSub}>Do not exceed</div>
+                                    <div className={styles.valueCardSub}>Hard ceiling</div>
                                 </div>
                             </div>
                         </div>
+                        {/* <FormulaNote note={bidCeiling.bid_formula_note} /> */}
                     </Section>
 
                     {/* ── SECTION 8 — Resale Price Range ── */}
-                    <Section title="Resale Price Range" subtitle="Step 8 — What You Could List For"
+                    <Section title="Resale Price Range" subtitle="Step 8 — Exit Strategy Pricing"
                         icon={<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>}
                     >
                         <div className={styles.valueRangeCards}>
                             {[
-                                { label: "Conservative", pct: "80% of MMV", value: resale.conservative_resale, sub: "Faster sale", style: { header: { background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }, tag: { color: "#15803d" }, tagPct: { color: "#166534" } } },
-                                { label: "★ Suggested / Mid", pct: "90% of MMV", value: resale.suggested_resale_price, sub: "Standard listing", style: { card: { border: "2px solid var(--primary-green)" }, header: { background: "linear-gradient(135deg, var(--deep-green), var(--primary-green))" }, tag: { color: "white" }, tagPct: { color: "rgba(255,255,255,0.7)" }, price: { color: "var(--accent-gold)" } } },
+                                { label: "Conservative", pct: "85% of MMV", value: resale.conservative_resale, sub: "Quick sale", style: { header: { background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }, tag: { color: "#15803d" }, tagPct: { color: "#166534" } } },
+                                { label: "★ Suggested", pct: "90% of MMV", value: resale.suggested_resale_price, sub: "Standard listing", style: { card: { border: "2px solid var(--primary-green)" }, header: { background: "linear-gradient(135deg, var(--deep-green), var(--primary-green))" }, tag: { color: "white" }, tagPct: { color: "rgba(255,255,255,0.7)" }, price: { color: "var(--accent-gold)" } } },
                                 { label: "Aggressive", pct: "95% of MMV", value: resale.aggressive_resale, sub: "Top of market", style: { header: { background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }, tag: { color: "#92400e" }, tagPct: { color: "#a16207" } } },
                             ].map(({ label, pct, value, sub, style: s }, i) => {
                                 const gp = calcResaleGrossProfit(value);
@@ -615,104 +645,141 @@ export default function ReportPage() {
                                 );
                             })}
                         </div>
+                        {/* <FormulaNote note={resale.resale_formula_note} /> */}
                     </Section>
 
-                    {/* ── SECTION 9 — Days on Market ── */}
-                    <Section title="Market Demand & Days on Market" subtitle="Step 9 — Sales Velocity & Market Liquidity"
-                        icon={<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
-                    >
-                        <div className={styles.marketClassBadge} style={{
-                            background: dom.market_classification === "Fast" ? "#f0fdf4" : dom.market_classification === "Normal" ? "#fffbeb" : dom.market_classification === "Slow" ? "#fff7ed" : "#fef2f2",
-                            borderColor: dom.market_classification === "Fast" ? "#bbf7d0" : dom.market_classification === "Normal" ? "#fde68a" : dom.market_classification === "Slow" ? "#fed7aa" : "#fecaca",
-                            color: dom.market_classification === "Fast" ? "#15803d" : dom.market_classification === "Normal" ? "#92400e" : dom.market_classification === "Slow" ? "#c2410c" : "#991b1b",
-                        }}>
-                            <strong>{dom.market_classification || NF}</strong>
-                            {dom.estimated_dom_range && <span> · Est. DOM: {dom.estimated_dom_range}</span>}
-                        </div>
-                        <div className={`${styles.dataGrid} ${styles.dataGridThree}`} style={{ marginTop: 16 }}>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Median DOM</div><div className={styles.dataValue}>{dom.median_dom ?? NF} days</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Sales Last 6 Mo</div><div className={styles.dataValue}>{dom.land_sales_last_6_months ?? NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Sales Last 12 Mo</div><div className={styles.dataValue}>{dom.land_sales_last_12_months ?? NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Active Listings</div><div className={styles.dataValue}>{dom.active_listings_count ?? NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Sold/Active Ratio</div><div className={styles.dataValue}>{dom.sold_to_active_ratio || NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Sales Velocity</div><div className={styles.dataValue}>{dom.sales_velocity || NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Turnover 6 Mo</div><div className={styles.dataValue}>{dom.zip_turnover_rate_6mo || NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Turnover 12 Mo</div><div className={styles.dataValue}>{dom.zip_turnover_rate_12mo || NF}</div></div>
-                            <div className={styles.dataItem}><div className={styles.dataLabel}>Inventory Count</div><div className={styles.dataValue}>{dom.inventory_count ?? NF}</div></div>
-                        </div>
-                    </Section>
+                    {/* ── SECTION 14 — Florida Max Bid Engine (FL only) ── */}
+                    {isFlorida && (
+                        <Section title="🌴 Florida Max Bid Engine" subtitle="Step 9 — FL-Specific Bid Thresholds"
+                            icon={<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
+                        >
+                            <div className={styles.valueRangeCards}>
+                                <div className={styles.valueCard}>
+                                    <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
+                                        <span className={styles.valueCardTag} style={{ color: "#15803d" }}>FL Low Bid</span>
+                                        <span style={{ fontSize: 11, color: "#166534" }}>Conservative</span>
+                                    </div>
+                                    <div className={styles.valueCardBody}>
+                                        <div className={styles.valueCardPrice}>{fmt(floridaBid.low_bid_threshold)}</div>
+                                        <div className={styles.valueCardSub}>Safe entry point</div>
+                                    </div>
+                                </div>
+                                <div className={styles.valueCard} style={{ border: "2px solid var(--primary-green)" }}>
+                                    <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, var(--deep-green), var(--primary-green))" }}>
+                                        <span className={styles.valueCardTag} style={{ color: "white" }}>★ FL Mid Bid</span>
+                                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Recommended</span>
+                                    </div>
+                                    <div className={styles.valueCardBody}>
+                                        <div className={styles.valueCardPrice} style={{ color: "var(--accent-gold)" }}>{fmt(floridaBid.mid_bid_threshold)}</div>
+                                        <div className={styles.valueCardSub}>Balanced risk/reward</div>
+                                    </div>
+                                </div>
+                                <div className={styles.valueCard} style={{ border: "2px solid #ef4444" }}>
+                                    <div className={styles.valueCardHeader} style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
+                                        <span className={styles.valueCardTag} style={{ color: "#dc2626" }}>FL Max Bid</span>
+                                        <span style={{ fontSize: 11, color: "#991b1b" }}>Do not exceed</span>
+                                    </div>
+                                    <div className={styles.valueCardBody}>
+                                        <div className={styles.valueCardPrice} style={{ color: "#ef4444" }}>{fmt(floridaBid.max_bid_ceiling)}</div>
+                                        <div className={styles.valueCardSub}>Hard ceiling</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Section>
+                    )}
 
-                    {/* ── SECTION 10 — Deal Score (Compact) ── */}
-                    <Section title="Deal Score" subtitle="Step 10 — Investment Quality Rating"
-                        icon={<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>}
-                    >
-                        <div className={styles.dealScoreCompact}>
-
-                            {/* Left: ring + verdict + explanation */}
-                            <div className={styles.dealScoreLeft}>
-                                {(() => {
-                                    const val = typeof dealScore.score === "number"
-                                        ? Math.min(Math.max(dealScore.score, 0), 100) : 0;
-                                    const r = 36;
-                                    const circ = 2 * Math.PI * r;
-                                    const offset = circ - (val / 100) * circ;
-                                    const ringColor = val >= 70 ? "#16a34a" : val >= 45 ? "var(--accent-gold)" : "#dc2626";
+                    {/* ── SECTION 15 — Florida Resale Range (FL only) ── */}
+                    {isFlorida && (
+                        <Section title="🌴 Florida Resale Range" subtitle="Step 10 — FL-Specific Resale Tiers (% of MMV)"
+                            icon={<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>}
+                        >
+                            <div className={styles.valueRangeCards}>
+                                {[
+                                    { label: "Conservative", pct: "88% of MMV", value: floridaBid.conservative_resale, sub: "Quick sale", style: { header: { background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }, tag: { color: "#15803d" }, tagPct: { color: "#166534" } } },
+                                    { label: "★ Suggested", pct: "92% of MMV", value: floridaBid.suggested_resale_price, sub: "Standard listing", style: { card: { border: "2px solid var(--primary-green)" }, header: { background: "linear-gradient(135deg, var(--deep-green), var(--primary-green))" }, tag: { color: "white" }, tagPct: { color: "rgba(255,255,255,0.7)" }, price: { color: "var(--accent-gold)" } } },
+                                    { label: "Aggressive", pct: "96% of MMV", value: floridaBid.aggressive_resale, sub: "Top of market", style: { header: { background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }, tag: { color: "#92400e" }, tagPct: { color: "#a16207" } } },
+                                ].map(({ label, pct, value, sub, style: s }, i) => {
+                                    const gp = (() => {
+                                        const bidRef = floridaBid.mid_bid_threshold ?? floridaBid.max_bid_ceiling;
+                                        if (typeof value === "number" && typeof bidRef === "number") return value - bidRef;
+                                        return null;
+                                    })();
                                     return (
-                                        <div className={styles.dealMiniRing}>
-                                            <svg width="96" height="96" viewBox="0 0 96 96"
-                                                style={{ transform: "rotate(-90deg)" }}>
-                                                <circle cx="48" cy="48" r={r} fill="none"
-                                                    stroke="rgba(0,0,0,0.06)" strokeWidth="9" />
-                                                <circle cx="48" cy="48" r={r} fill="none"
-                                                    stroke={ringColor} strokeWidth="9"
-                                                    strokeLinecap="round"
-                                                    strokeDasharray={circ}
-                                                    strokeDashoffset={offset}
-                                                    style={{ transition: "stroke-dashoffset 1s ease-out" }} />
-                                            </svg>
-                                            <div className={styles.dealMiniRingInner}>
-                                                <span className={styles.dealMiniScore} style={{ color: ringColor }}>
-                                                    {dealScore.score ?? "—"}
-                                                </span>
-                                                <span className={styles.dealMiniDenom}>/100</span>
+                                        <div key={i} className={styles.valueCard} style={s.card || {}}>
+                                            <div className={styles.valueCardHeader} style={s.header}>
+                                                <span className={styles.valueCardTag} style={s.tag}>{label}</span>
+                                                <span style={{ fontSize: 11, ...s.tagPct }}>{pct}</span>
+                                            </div>
+                                            <div className={styles.valueCardBody}>
+                                                <div className={styles.valueCardPrice} style={s.price || {}}>{fmt(value)}</div>
+                                                <div className={styles.valueCardSub}>{sub}</div>
+                                                {gp !== null && (
+                                                    <div className={`${styles.grossProfitRow} ${gp >= 0 ? styles.grossProfitPositive : styles.grossProfitNegative}`}>
+                                                        <span>Est. Gross Profit:</span>
+                                                        <strong>{gp >= 0 ? "+" : ""}{fmt(gp)}</strong>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );
-                                })()}
-                                {summary.verdict && (
-                                    <div className={`${styles.dealVerdictChip} ${verdictClass}`}>
-                                        {summary.verdict}
-                                    </div>
-                                )}
-                                {dealScore.explanation && (
-                                    <p className={styles.dealExplanation}>{dealScore.explanation}</p>
-                                )}
+                                })}
                             </div>
+                        </Section>
+                    )}
 
-                            {/* Right: progress bar + factors */}
-                            <div className={styles.dealScoreRight}>
-                                <div className={styles.dealScoreBarWrap}>
-                                    <div className={styles.dealScoreBarTrack}>
-                                        <div className={styles.dealScoreBarFill} style={{
-                                            width: `${dealScore.score ?? 0}%`,
-                                            background: (dealScore.score ?? 0) >= 70
-                                                ? "linear-gradient(90deg, #16a34a, #4ade80)"
-                                                : (dealScore.score ?? 0) >= 45
-                                                    ? "linear-gradient(90deg, #d97706, var(--accent-gold))"
-                                                    : "linear-gradient(90deg, #dc2626, #f87171)"
-                                        }} />
+                    {/* ── SECTION 9 — Days on Market ── */}
+                    <Section title="Days on Market & Market Speed" subtitle="Step 11 — How Fast Does Land Sell Here?"
+                        icon={<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>}
+                    >
+                        <div className={styles.subSectionBox}>
+                            <div className={styles.subSectionBoxTitle}>📊 Market Speed Indicators</div>
+                            <div className={`${styles.dataGrid} ${styles.dataGridThree}`}>
+                                <div className={styles.dataItem}><div className={styles.dataLabel}>Market Type</div><div className={styles.dataValue}>{dom.market_classification || NF}</div></div>
+                                <div className={styles.dataItem}><div className={styles.dataLabel}>Median DOM</div><div className={styles.dataValue}>{dom.median_dom ? `${dom.median_dom} days` : NF}</div></div>
+                                <div className={styles.dataItem}><div className={styles.dataLabel}>Est. DOM Range</div><div className={styles.dataValue}>{dom.estimated_dom_range || NF}</div></div>
+                            </div>
+                        </div>
+                        {dom.market_notes && (
+                            <div className={styles.infoNote}>📋 {dom.market_notes}</div>
+                        )}
+                    </Section>
+
+                    {/* ── SECTION 10 — Deal Score ── */}
+                    <Section title="Deal Score & Verdict" subtitle="Step 12 — Overall Investment Signal"
+                        icon={<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>}
+                    >
+                        <div className={styles.dealScoreCompact}>
+                            <div className={styles.dealScoreLeft}>
+                                <div className={styles.dealMiniRing}>
+                                    <svg width="96" height="96" viewBox="0 0 96 96">
+                                        <circle cx="48" cy="48" r="40" fill="none" stroke="var(--surface-mint)" strokeWidth="8" />
+                                        <circle cx="48" cy="48" r="40" fill="none"
+                                            stroke={dealScore.score >= 75 ? "#16a34a" : dealScore.score >= 50 ? "#f59e0b" : "#ef4444"}
+                                            strokeWidth="8" strokeLinecap="round"
+                                            strokeDasharray={`${(dealScore.score / 100) * 251.2} 251.2`}
+                                            transform="rotate(-90 48 48)" />
+                                    </svg>
+                                    <div className={styles.dealMiniRingInner}>
+                                        <span className={styles.dealMiniScore} style={{ color: dealScore.score >= 75 ? "#16a34a" : dealScore.score >= 50 ? "#f59e0b" : "#ef4444" }}>
+                                            {dealScore.score ?? "—"}
+                                        </span>
+                                        <span className={styles.dealMiniDenom}>/100</span>
                                     </div>
-                                    <span className={styles.dealScoreBarLabel}>
-                                        {(dealScore.score ?? 0) >= 70 ? "Strong" :
-                                            (dealScore.score ?? 0) >= 45 ? "Moderate" : "Weak"}
-                                    </span>
                                 </div>
-                                {dealScore.scoring_factors?.length > 0 && (
+                                <span className={`${styles.dealVerdictChip} ${verdictClass}`}>{summary.verdict || "—"}</span>
+                                <div className={styles.dealExplanation}>
+                                    {dealScore.score >= 75 ? "Strong opportunity — proceed with due diligence" :
+                                        dealScore.score >= 50 ? "Moderate deal — review concerns carefully" :
+                                            "High risk — verify all red flags before bidding"}
+                                </div>
+                            </div>
+                            <div className={styles.dealScoreRight}>
+                                {(dealScore.scoring_factors?.length > 0) && (
                                     <div className={styles.dealFactorsList}>
                                         {dealScore.scoring_factors.map((f, i) => (
                                             <div key={i} className={styles.dealFactorRow}>
-                                                <span className={styles.dealFactorDot} />
-                                                <span className={styles.dealFactorText}>{f}</span>
+                                                <div className={styles.dealFactorDot} />
+                                                <div className={styles.dealFactorText}>{f}</div>
                                             </div>
                                         ))}
                                     </div>
@@ -722,13 +789,15 @@ export default function ReportPage() {
                     </Section>
 
                     {/* ── SECTION 11 — Red Flags ── */}
-                    <Section title="Red Flags" subtitle="Step 11 — Critical Issues"
-                        icon={<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
+                    <Section title="Red Flags & Deal Breakers" subtitle="Step 13 — Issues Requiring Immediate Attention"
+                        icon={<svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>}
                     >
                         {redFlags.length > 0 ? (
                             <div className={styles.redFlagsList}>
                                 {redFlags.map((flag, i) => (
-                                    <div key={i} className={styles.redFlagItem}><span>🚩</span> {flag}</div>
+                                    <div key={i} className={styles.redFlagItem}>
+                                        <span>🚩</span> {flag}
+                                    </div>
                                 ))}
                             </div>
                         ) : (
@@ -736,37 +805,44 @@ export default function ReportPage() {
                         )}
                     </Section>
 
-                    {/* ── SECTION 12 — Next Step ── */}
-                    {nextStep && (
-                        <Section title="Next Learning Step" subtitle="Step 12 — Educational Guidance"
-                            icon={<svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>}
-                        >
-                            <div className={styles.infoNote} style={{ lineHeight: 1.7 }}>📘 {nextStep}</div>
-                        </Section>
-                    )}
+                    {/* ── SECTION 12 — Next Learning Step ── */}
+                    <Section title="Next Learning Step" subtitle="Step 14 — What to Research Next"
+                        icon={<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>}
+                    >
+                        {nextStep ? (
+                            <div className={styles.infoNote}>{nextStep}</div>
+                        ) : (
+                            <div className={styles.notAvailable}>No additional steps identified.</div>
+                        )}
+                    </Section>
 
                     {/* ── SECTION 13 — Sources ── */}
-                    {sources.length > 0 && (
-                        <Section title="Sources Checked" subtitle="Step 13 — All URLs Searched During Research"
-                            icon={<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>}
-                        >
+                    <Section title="Sources Checked" subtitle="Step 15 — Data Verification Trail"
+                        icon={<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>}
+                    >
+                        {sources.length > 0 ? (
                             <div className={styles.sourcesList}>
-                                {sources.map((s, i) => (
-                                    s.startsWith("http")
-                                        ? <a key={i} href={s} target="_blank" rel="noopener noreferrer" className={styles.sourceTag}>{s}</a>
-                                        : <span key={i} className={styles.sourceTag}>{s}</span>
-                                ))}
+                                {sources.map((src, i) => {
+                                    const isUrl = String(src).startsWith("http");
+                                    return isUrl
+                                        ? <a key={i} href={src} target="_blank" rel="noopener noreferrer" className={styles.sourceTag}>{src}</a>
+                                        : <span key={i} className={styles.sourceTag}>{src}</span>;
+                                })}
                             </div>
-                        </Section>
-                    )}
+                        ) : (
+                            <div className={styles.notAvailable}>No sources listed.</div>
+                        )}
+                    </Section>
+
                 </div>
 
                 <div className={styles.disclaimer}>
-                    <strong>⚖️ Disclaimer:</strong> {disclaimer}
+                    <strong>Disclaimer:</strong> {disclaimer}
                 </div>
+
             </div>
 
-            <ChatBot reportId={report.id} />
+            <ChatBot apn={report.apn} reportData={d} />
         </div>
     );
 }
