@@ -52,6 +52,14 @@ export default function Navbar({ userName }) {
                             </li>
                             <li>
                                 <a
+                                    href="/batch-reports"
+                                    className={`${styles.navLink} ${pathname.startsWith("/batch-reports") ? styles.navLinkActive : ""}`}
+                                >
+                                    Batch Reports
+                                </a>
+                            </li>
+                            <li>
+                                <a
                                     href="/reports"
                                     className={`${styles.navLink} ${pathname === "/reports" ? styles.navLinkActive : ""}`}
                                 >
@@ -99,6 +107,15 @@ export default function Navbar({ userName }) {
                                 onClick={closeMenu}
                             >
                                 Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="/batch-reports"
+                                className={`${styles.mobileNavLink} ${pathname.startsWith("/batch-reports") ? styles.mobileNavLinkActive : ""}`}
+                                onClick={closeMenu}
+                            >
+                                Batch Reports
                             </a>
                         </li>
                         <li>
