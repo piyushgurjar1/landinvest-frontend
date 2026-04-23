@@ -287,7 +287,7 @@ export default function DashboardPage() {
         }
     };
 
-    // ── CSV Upload ──
+    // ── CSV Upload → Batch Analysis ──
     const handleCsvUpload = async () => {
         if (!csvFile) return;
         setCsvUploading(true);
@@ -310,7 +310,9 @@ export default function DashboardPage() {
             const data = await res.json();
             setCsvResult(data);
             setCsvFile(null);
-            setSuccessMsg(`✅ ${data.message}`);
+            setSuccessMsg(`✅ Batch started — ${data.total_properties} properties queued for analysis.`);
+            // Navigate to batch reports after short delay
+            setTimeout(() => router.push("/batch-reports"), 1500);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -334,9 +336,6 @@ export default function DashboardPage() {
             if (!checkRes.ok) throw new Error("Pre-check failed");
             const checkData = await checkRes.json();
 
-            if (checkData.parcel_county && !countyInput.trim()) setCountyInput(checkData.parcel_county);
-            if (checkData.parcel_state && !stateInput.trim()) setStateInput(checkData.parcel_state);
-
             if (checkData.has_existing_report) {
                 setSearchLoading(false);
                 setModal({
@@ -344,16 +343,6 @@ export default function DashboardPage() {
                     message: `A report for APN "${apnInput.trim()}" already exists. Do you want to view the existing report or run a new analysis?`,
                     onView: () => { setModal(null); router.push(`/report/${checkData.existing_report_id}`); },
                     onNew: () => { setModal(null); runAnalysis(token); },
-                });
-                return;
-            }
-
-            if (!checkData.has_parcel_data) {
-                setSearchLoading(false);
-                setModal({
-                    type: "no_data",
-                    message: `APN "${apnInput.trim()}" does not exist in your uploaded parcel data. The analysis will rely entirely on AI research. Proceed?`,
-                    onConfirm: () => { setModal(null); runAnalysis(token); },
                 });
                 return;
             }
@@ -490,8 +479,8 @@ export default function DashboardPage() {
                                 <div className={styles.addressAutoWrap}>
                                     <div className={`${styles.addressInputWrap} ${addressFocused ? styles.addressInputWrapFocused : ""}`}>
                                         <svg className={styles.addressPinIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                            <circle cx="12" cy="10" r="3"/>
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
                                         </svg>
                                         <input
                                             id="address-input"
@@ -523,8 +512,8 @@ export default function DashboardPage() {
                                                 aria-label="Clear address"
                                             >
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
                                                 </svg>
                                             </button>
                                         )}
@@ -547,8 +536,8 @@ export default function DashboardPage() {
                                                 >
                                                     <span className={styles.suggestionPin}>
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                                            <circle cx="12" cy="10" r="3"/>
+                                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                                            <circle cx="12" cy="10" r="3" />
                                                         </svg>
                                                     </span>
                                                     <span className={styles.suggestionText}>
