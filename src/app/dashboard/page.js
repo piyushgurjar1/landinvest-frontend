@@ -377,8 +377,10 @@ export default function DashboardPage() {
                 const data = await res.json();
                 throw new Error(data.detail || "Lookup failed");
             }
-            const report = await res.json();
-            router.push(`/report/${report.id}`);
+            const data = await res.json();
+            // Analysis runs in background — redirect to Reports page
+            setSuccessMsg("Analysis started! Track progress in Reports.");
+            setTimeout(() => router.push("/reports"), 1500);
         } catch (err) {
             setError(err.message);
         } finally {
