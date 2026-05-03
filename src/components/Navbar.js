@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import styles from "./Navbar.module.css";
 
-export default function Navbar({ userName }) {
+export default function Navbar({ userName, userRole }) {
     const router = useRouter();
     const pathname = usePathname();
     const [menuOpen, setMenuOpen] = useState(false);
@@ -66,6 +66,16 @@ export default function Navbar({ userName }) {
                                     Reports
                                 </a>
                             </li>
+                            {userRole === "admin" && (
+                                <li>
+                                    <a
+                                        href="/admin/users"
+                                        className={`${styles.navLink} ${pathname.startsWith("/admin") ? styles.navLinkActive : ""}`}
+                                    >
+                                        Manage Users
+                                    </a>
+                                </li>
+                            )}
                         </ul>
                     </div>
 
@@ -127,6 +137,17 @@ export default function Navbar({ userName }) {
                                 Reports
                             </a>
                         </li>
+                        {userRole === "admin" && (
+                            <li>
+                                <a
+                                    href="/admin/users"
+                                    className={`${styles.mobileNavLink} ${pathname.startsWith("/admin") ? styles.mobileNavLinkActive : ""}`}
+                                    onClick={closeMenu}
+                                >
+                                    Manage Users
+                                </a>
+                            </li>
+                        )}
                     </ul>
 
                     <div className={styles.mobileDivider} />

@@ -79,7 +79,7 @@ export default function ReportPage() {
     if (loading || !report) {
         return (
             <div className={styles.reportPage}>
-                <Navbar userName={user?.name} />
+                <Navbar userName={user?.name} userRole={user?.role} />
                 <div className={styles.loadingContainer}>
                     <div className={styles.spinner} />
                     <div className={styles.loadingText}>Generating due diligence report…</div>
@@ -234,7 +234,7 @@ export default function ReportPage() {
 
     return (
         <div className={styles.reportPage}>
-            <Navbar userName={user?.name} />
+            <Navbar userName={user?.name} userRole={user?.role} />
 
             {/* ── Download Bar ── */}
             <div className={styles.downloadBar}>

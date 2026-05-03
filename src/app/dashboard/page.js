@@ -390,7 +390,7 @@ export default function DashboardPage() {
 
     return (
         <div className={styles.dashboardPage}>
-            <Navbar userName={user?.name} />
+            <Navbar userName={user?.name} userRole={user?.role} />
 
             {modal && (
                 <div className={styles.modalOverlay} onClick={() => setModal(null)}>
@@ -678,7 +678,7 @@ export default function DashboardPage() {
                                     </>
                                 )}
                             </button>
-                            {csvResult && <div className={styles.successMessage}>✅ {csvResult.message}</div>}
+                            {successMsg && <div className={styles.successMessage}>{successMsg}</div>}
                         </div>
                     </div>
                 </div>

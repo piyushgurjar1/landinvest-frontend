@@ -12,11 +12,13 @@ export default function BatchDetailPage() {
     const [user, setUser] = useState(null);
     const [batch, setBatch] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [retrying, setRetrying] = useState(false);
 
     const fetchBatch = async (token) => {
         try {
             const res = await fetch(`${API_BASE}/api/apn/batches/${params.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
+                cache: "no-store",
             });
             if (!res.ok) { router.replace("/batch-reports"); return; }
             setBatch(await res.json());
@@ -55,19 +57,20 @@ export default function BatchDetailPage() {
     const statusColor = (s) =>
         s === "completed" ? "var(--success)" :
             s === "processing" ? "var(--warning)" :
-                s === "pending" ? "var(--text-muted)" :
+                s === "pending" || s === "interrupted" ? "var(--text-muted)" :
                     "var(--error)";
 
     const statusIcon = (s) =>
         s === "completed" ? "✓" :
             s === "processing" ? "⟳" :
                 s === "pending" ? "⏳" :
-                    "✗";
+                    s === "interrupted" ? "⏸" :
+                        "✗";
 
     if (loading || !batch) {
         return (
             <div className={styles.page}>
-                <Navbar userName={user?.name} />
+                <Navbar userName={user?.name} userRole={user?.role} />
                 <div className={styles.loadingContainer}>
                     <div className={styles.spinner} />
                     <div className={styles.loadingText}>Loading batch details…</div>
@@ -77,13 +80,19 @@ export default function BatchDetailPage() {
     }
 
     const items = batch.items || [];
+
+    // Dynamically calculate processed count from individual items
+    const activeProcessedCount = items.filter(i => i.status === "completed" || i.status === "failed").length;
     const progress = batch.total_properties > 0
-        ? Math.round((batch.processed_count / batch.total_properties) * 100)
+        ? Math.round((activeProcessedCount / batch.total_properties) * 100)
         : 0;
+
+    const isInterrupted = batch.status === "completed" && activeProcessedCount < batch.total_properties;
+    const displayStatus = isInterrupted ? "interrupted" : batch.status;
 
     return (
         <div className={styles.page}>
-            <Navbar userName={user?.name} />
+            <Navbar userName={user?.name} userRole={user?.role} />
             <div className={styles.container}>
                 {/* Back link */}
                 <button className={styles.backBtn} onClick={() => router.push("/batch-reports")}>
@@ -99,14 +108,14 @@ export default function BatchDetailPage() {
                         <h1 className={styles.title}>{batch.filename}</h1>
                         <div
                             className={styles.statusBadge}
-                            style={{ color: statusColor(batch.status), borderColor: statusColor(batch.status) }}
+                            style={{ color: statusColor(displayStatus), borderColor: statusColor(displayStatus) }}
                         >
-                            {statusIcon(batch.status)} {batch.status}
+                            {statusIcon(displayStatus)} {displayStatus}
                         </div>
                     </div>
                     <div className={styles.headerMeta}>
                         {batch.total_properties} properties ·
-                        {batch.processed_count} processed ·
+                        {activeProcessedCount} processed ·
                         {batch.created_at && <> {new Date(batch.created_at).toLocaleString()}</>}
                     </div>
                     <div className={styles.progressBarLarge}>
@@ -114,12 +123,44 @@ export default function BatchDetailPage() {
                             className={styles.progressFillLarge}
                             style={{
                                 width: `${progress}%`,
-                                background: statusColor(batch.status),
+                                background: statusColor(displayStatus),
                             }}
                         />
                     </div>
                     <div className={styles.progressPercent}>{progress}% complete</div>
                 </div>
+
+                {/* Retry / Resume Button */}
+                {batch.status !== "processing" && items.some(i => i.status === "failed" || i.status === "pending") && (
+                    <button
+                        className={styles.retryBtn}
+                        disabled={retrying}
+                        onClick={async () => {
+                            setRetrying(true);
+                            try {
+                                const token = localStorage.getItem("token");
+                                const res = await fetch(`${API_BASE}/api/apn/batches/${params.id}/retry-failed`, {
+                                    method: "POST",
+                                    headers: { Authorization: `Bearer ${token}` },
+                                });
+                                if (res.ok) {
+                                    // Optimistic UI update to instantly show processing & hide button 
+                                    setBatch(prev => prev ? { ...prev, status: "processing" } : null);
+
+                                    // Await the fresh data fetch so finally block waits
+                                    await fetchBatch(token);
+                                }
+                            } catch { /* ignore */ }
+                            finally { setRetrying(false); }
+                        }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 4v6h6M23 20v-6h-6" />
+                            <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+                        </svg>
+                        {retrying ? "Resuming..." : "Retry Failed Reports"}
+                    </button>
+                )}
 
                 {/* Items table */}
                 <div className={styles.tableWrapper}>
@@ -131,6 +172,9 @@ export default function BatchDetailPage() {
                                 <th>Address</th>
                                 <th>County</th>
                                 <th>State</th>
+                                <th>Deal Score</th>
+                                <th>Bid Ceiling</th>
+                                <th>Market Value</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -143,6 +187,18 @@ export default function BatchDetailPage() {
                                     <td>{item.address || "—"}</td>
                                     <td>{item.county || "—"}</td>
                                     <td>{item.state || "—"}</td>
+                                    <td className={styles.cellScore}>
+                                        {item.deal_score != null ? (
+                                            <span style={{
+                                                color: item.deal_score >= 70 ? 'var(--success)' : item.deal_score >= 40 ? 'var(--warning)' : 'var(--error)',
+                                                fontWeight: 600
+                                            }}>
+                                                {item.deal_score}
+                                            </span>
+                                        ) : "—"}
+                                    </td>
+                                    <td>{item.bid_ceiling != null ? `$${Number(item.bid_ceiling).toLocaleString()}` : "—"}</td>
+                                    <td>{item.estimated_market_value != null ? `$${Number(item.estimated_market_value).toLocaleString()}` : "—"}</td>
                                     <td>
                                         <span
                                             className={styles.itemStatus}
