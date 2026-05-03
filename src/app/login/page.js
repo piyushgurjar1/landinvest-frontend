@@ -12,6 +12,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
     const [error, setError] = useState("");
+    const [successMsg, setSuccessMsg] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [checking, setChecking] = useState(true);
@@ -52,6 +53,7 @@ export default function LoginPage() {
 
     const handleSubmit = async () => {
         setError("");
+        setSuccessMsg("");
         setLoading(true);
 
         try {
@@ -64,6 +66,9 @@ export default function LoginPage() {
 
                 if (!res.ok) {
                     const data = await res.json();
+                    if (res.status === 403) {
+                        throw new Error(data.detail || "Account pending admin approval");
+                    }
                     throw new Error(data.detail || "Invalid credentials");
                 }
 
@@ -82,20 +87,9 @@ export default function LoginPage() {
                     throw new Error(data.detail || "Registration failed");
                 }
 
-                const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                if (loginRes.ok) {
-                    const loginData = await loginRes.json();
-                    localStorage.setItem("token", loginData.access_token);
-                    window.location.href = "/dashboard";
-                } else {
-                    setIsLogin(true);
-                    setError("Registered successfully! Please log in.");
-                }
+                // Don't auto-login — show pending approval message
+                setIsLogin(true);
+                setSuccessMsg("Account created! Your account is pending admin approval. You will be able to log in once approved.");
             }
         } catch (err) {
             setError(err.message);
@@ -129,6 +123,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Error */}
+                {successMsg && <div className={styles.successMsg} style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16, border: '1px solid rgba(34,197,94,0.25)' }}>{successMsg}</div>}
                 {error && <div className={styles.errorMsg}>{error}</div>}
 
                 {/* div instead of form — prevents Chrome breach popup */}

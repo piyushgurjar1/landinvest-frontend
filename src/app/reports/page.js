@@ -139,7 +139,7 @@ export default function ReportsPage() {
 
     return (
         <div className={styles.reportsPage}>
-            <Navbar userName={user?.name} />
+            <Navbar userName={user?.name} userRole={user?.role} />
 
             <div className={styles.container}>
                 <div className={styles.header}>

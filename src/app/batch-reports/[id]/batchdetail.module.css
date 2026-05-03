@@ -117,6 +117,33 @@
     margin-top: 4px;
 }
 
+/* Retry Failed Button */
+.retryBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding: 10px 20px;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.retryBtn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.22);
+}
+
+.retryBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Table */
 .tableWrapper {
     overflow-x: auto;
